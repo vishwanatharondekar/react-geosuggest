@@ -30,6 +30,7 @@
     "uglifyjs": "^2.4.10"
   },
   "scripts": {
+    "preinstall": "npm run prepublish",
     "prepublish": "npm run build:module",
     "lint": "eslint ./src/*.jsx ./example/src",
     "test": "npm run lint",

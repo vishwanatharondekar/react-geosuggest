@@ -1,6 +1,5 @@
 dist
 example
-src
 .editorconfig
 .gitignore
 .travis.yml

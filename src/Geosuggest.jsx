@@ -38,6 +38,7 @@ const Geosuggest = React.createClass({
     return {
       isSuggestsHidden: true,
       userInput: this.props.initialValue,
+      placeholder : this.props.placeholder,
       activeSuggest: null,
       suggests: []
     };
@@ -123,8 +124,8 @@ const Geosuggest = React.createClass({
 
     var options = {
       input: this.state.userInput,
-      location: this.props.location || new this.googleMaps.LatLng(0, 0),
-      radius: this.props.radius
+      location: this.state.location || new this.googleMaps.LatLng(0, 0),
+      radius: this.state.radius || 0
     };
 
     if (this.props.bounds) {
@@ -310,7 +311,21 @@ const Geosuggest = React.createClass({
           lng: location.lng()
         };
 
-        this.props.onSuggestSelect(suggest);
+        if(suggest.gmaps.types.indexOf("sublocality_level_1")!=-1){
+          this.setState({
+            locality : suggest.gmaps.address_components[0].short_name,
+            userInput : '',
+            placeholder : 'Where in ' + suggest.gmaps.address_components[0].short_name,
+            location : location,
+            radius : 5000
+          });
+
+          this.refs['geosuggestInput'].style['padding-left'] = (this.refs['big-locality'].offsetWidth+12) + "px";
+
+        } else {
+          this.props.onSuggestSelect(suggest);
+        }
+
       }.bind(this)
     );
   },
@@ -328,12 +343,13 @@ const Geosuggest = React.createClass({
           ref="geosuggestInput"
           type="text"
           value={this.state.userInput}
-          placeholder={this.props.placeholder}
+          placeholder={this.state.placeholder}
           disabled={this.props.disabled}
           onKeyDown={this.onInputKeyDown}
           onChange={this.onInputChange}
           onFocus={this.onFocus}
           onBlur={this.hideSuggests} />
+        <span ref="big-locality" className="locality">{this.state.locality}</span>
         <ul className={this.getSuggestsClasses()}>
           {this.getSuggestItems()}
         </ul>

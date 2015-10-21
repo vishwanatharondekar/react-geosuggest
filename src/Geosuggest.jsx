@@ -209,10 +209,10 @@ const Geosuggest = React.createClass({
     this.setState({
       locality : undefined,
       placeholder : this.props.placeholder
-
     });
     this.refs['big-locality'].style['display'] = "none";
     this.refs['geosuggestInput'].style['padding-left'] = "1em";
+    this.refs['geosuggestInput'].focus();
   },
 
   clearIfLocality : function (argument) {
@@ -342,7 +342,7 @@ const Geosuggest = React.createClass({
 
           this.refs['big-locality'].style['display'] = "block";
           this.refs['geosuggestInput'].style['padding-left'] = (this.refs['big-locality'].offsetWidth+12) + "px";
-
+          this.refs['geosuggestInput'].focus();
         } else {
           this.props.onSuggestSelect(suggest);
         }
@@ -356,6 +356,7 @@ const Geosuggest = React.createClass({
    * @return {Function} The React element to render
    */
   render: function() {
+    let bigLocalityVisible = this.state.locality?'block':'none';
     return (// eslint-disable-line no-extra-parens
       <div className={'geosuggest ' + this.props.className}
           onClick={this.onClick}>
@@ -370,9 +371,9 @@ const Geosuggest = React.createClass({
           onChange={this.onInputChange}
           onFocus={this.onFocus}
           onBlur={this.hideSuggests} />
-        <div ref="big-locality" className="locality">
+        <div ref="big-locality" className="locality" style={{display:bigLocalityVisible}}>
           <span>{this.state.locality}</span>
-          <span onClick={this.clearLocality}>X</span>
+          <span onClick={this.clearLocality} className="delete-icon">X</span>
         </div>
         <ul className={this.getSuggestsClasses()}>
           {this.getSuggestItems()}

@@ -66,3 +66,12 @@
 .geosuggest-item--active:focus {
   background: #ccc;
 }
+
+.geosuggest .locality{
+    position: absolute;
+    left: 10px;
+    top: 7px;
+}
+.geosuggest .delete-icon{
+  margin: 0 5px;
+}

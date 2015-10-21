@@ -67,6 +67,7 @@ const Geosuggest = React.createClass({
 
     this.autocompleteService = new googleMap.places.AutocompleteService();
     this.geocoder = new googleMap.Geocoder();
+    this.refs['big-locality'].style['display'] = "none";
   },
 
   setInputValue: function(value) {
@@ -204,6 +205,23 @@ const Geosuggest = React.createClass({
     }.bind(this), 100);
   },
 
+  clearLocality : function(){
+    this.setState({
+      locality : undefined,
+      placeholder : this.props.placeholder
+
+    });
+    this.refs['big-locality'].style['display'] = "none";
+    this.refs['geosuggestInput'].style['padding-left'] = "1em";
+  },
+
+  clearIfLocality : function (argument) {
+    if(this.state.userInput===""){
+      this.clearLocality();
+    }
+    console.log('Clear if locality here');
+  },
+
   /**
    * When a key gets pressed in the input
    * @param  {Event} event The keypress event
@@ -228,6 +246,8 @@ const Geosuggest = React.createClass({
       case 27: // ESC
         this.hideSuggests();
         break;
+      case 8:
+        this.clearIfLocality();
       default:
         break;
     }
@@ -315,11 +335,12 @@ const Geosuggest = React.createClass({
           this.setState({
             locality : suggest.gmaps.address_components[0].short_name,
             userInput : '',
-            placeholder : 'Where in ' + suggest.gmaps.address_components[0].short_name,
+            placeholder : 'Where in ' + suggest.gmaps.address_components[0].short_name + " ?",
             location : location,
             radius : 5000
           });
 
+          this.refs['big-locality'].style['display'] = "block";
           this.refs['geosuggestInput'].style['padding-left'] = (this.refs['big-locality'].offsetWidth+12) + "px";
 
         } else {
@@ -349,7 +370,10 @@ const Geosuggest = React.createClass({
           onChange={this.onInputChange}
           onFocus={this.onFocus}
           onBlur={this.hideSuggests} />
-        <span ref="big-locality" className="locality">{this.state.locality}</span>
+        <div ref="big-locality" className="locality">
+          <span>{this.state.locality}</span>
+          <span onClick={this.clearLocality}>X</span>
+        </div>
         <ul className={this.getSuggestsClasses()}>
           {this.getSuggestItems()}
         </ul>

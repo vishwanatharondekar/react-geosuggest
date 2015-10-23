@@ -85,8 +85,8 @@ const Geosuggest = React.createClass({
     var _this = this;
     if(obj.value){
       this.setState({
-          userInput: value
-        });
+        userInput: obj.value
+      });
     } else if (obj.placeId){
       this.geocoder.geocode({
         placeId: obj.placeId
@@ -106,7 +106,7 @@ const Geosuggest = React.createClass({
           lng: location.lng()
         };
 
-        //_this.props.onSuggestSelect(suggest);
+        _this.props.onSuggestSelect(suggest);
       });
     }
 

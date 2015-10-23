@@ -361,12 +361,7 @@ const Geosuggest = React.createClass({
 
         var gmaps = results[0],
           location = gmaps.geometry.location;
-
         suggest.gmaps = gmaps;
-        suggest.location = {
-          lat: location.lat(),
-          lng: location.lng()
-        };
 
         if(suggest.gmaps.types.indexOf("sublocality_level_1")!=-1){
           this.setState({
@@ -381,6 +376,10 @@ const Geosuggest = React.createClass({
           this.refs['geosuggestInput'].style['padding-left'] = (this.refs['big-locality'].offsetWidth+12) + "px";
           this.refs['geosuggestInput'].focus();
         } else {
+          suggest.location = {
+            lat: location.lat(),
+            lng: location.lng()
+          };
           this.props.onSuggestSelect(suggest);
         }
 

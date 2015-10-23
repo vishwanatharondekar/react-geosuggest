@@ -246,7 +246,8 @@ const Geosuggest = React.createClass({
   clearLocality : function(){
     this.setState({
       locality : undefined,
-      placeholder : this.props.placeholder
+      placeholder : this.props.placeholder,
+      activeSuggest : undefined
     });
     this.refs['big-locality'].style['display'] = "none";
     this.refs['geosuggestInput'].style['padding-left'] = "1em";
@@ -283,7 +284,7 @@ const Geosuggest = React.createClass({
       case 27: // ESC
         this.hideSuggests();
         break;
-      case 8:
+      case 8://Backspace
         this.clearIfLocality();
       default:
         break;
@@ -329,17 +330,17 @@ const Geosuggest = React.createClass({
    */
   selectSuggest: function(suggest) {
     if (!suggest) {
-      suggest = {
-        label: this.state.userInput
-      };
+      return;
     }
 
     this.setState({
-      isSuggestsHidden: true,
-      userInput: suggest.label
+      isSuggestsHidden: true
     });
 
     if (suggest.location) {
+      this.setState({
+        userInput: suggest.label
+      });
       this.props.onSuggestSelect(suggest);
       return;
     }

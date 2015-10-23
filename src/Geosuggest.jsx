@@ -20,6 +20,7 @@ const Geosuggest = React.createClass({
       bounds: null,
       country: null,
       types: null,
+      googleMaps: null,
       onSuggestSelect: () => {},
       onFocus: () => {},
       onBlur: () => {},
@@ -54,15 +55,21 @@ const Geosuggest = React.createClass({
     }
   },
 
+  /**
+   * Called on the client side after component is mounted.
+   * Google api sdk object will be obtained and cached as a instance property.
+   * Necessary objects of google api will also be determined and saved.
+   */
   componentDidMount: function() {
     this.setInputValue(this.props.initialValue);
 
-    var googleMap = (google && google.maps) || this.googleMaps;
+    var googleMaps = this.props.googleMaps
+      || (google && google.maps) || this.googleMaps;
 
-    if (!googleMap) {
+    if (!googleMaps) {
       console.error('Google map api was not found in the page.');
     } else {
-      this.googleMaps = googleMap;
+      this.googleMaps = googleMaps;
     }
 
     this.autocompleteService = new googleMap.places.AutocompleteService();
@@ -70,6 +77,10 @@ const Geosuggest = React.createClass({
     this.refs['big-locality'].style['display'] = "none";
   },
 
+  /**
+   * Method used for setting initial value.
+   * @param {string} value to set in input
+   */
   setInputValue: function(value) {
     this.setState({
       userInput: value

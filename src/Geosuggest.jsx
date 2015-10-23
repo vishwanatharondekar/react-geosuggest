@@ -61,8 +61,6 @@ const Geosuggest = React.createClass({
    * Necessary objects of google api will also be determined and saved.
    */
   componentDidMount: function() {
-    this.setInputValue(this.props.initialValue);
-
     var googleMaps = this.props.googleMaps
       || (google && google.maps) || this.googleMaps;
 
@@ -75,16 +73,45 @@ const Geosuggest = React.createClass({
     this.autocompleteService = new googleMaps.places.AutocompleteService();
     this.geocoder = new googleMaps.Geocoder();
     this.refs['big-locality'].style['display'] = "none";
+    this.setInputValue({ value : this.props.initialValue, placeId : this.props.placeId});
   },
 
   /**
    * Method used for setting initial value.
    * @param {string} value to set in input
    */
-  setInputValue: function(value) {
-    this.setState({
-      userInput: value
-    });
+  setInputValue: function(obj) {
+
+    var _this = this;
+    if(obj.value){
+      this.setState({
+          userInput: value
+        });
+    } else if (obj.placeId){
+      this.geocoder.geocode({
+        placeId: obj.placeId
+      }, function(results, status) {
+        var gmaps = results[0],
+          location = gmaps.geometry.location;
+
+        var value = gmaps.formatted_address;
+        _this.setState({
+          userInput: value
+        });
+
+        var suggest = {};
+        suggest.gmaps = gmaps;
+        suggest.location = {
+          lat: location.lat(),
+          lng: location.lng()
+        };
+
+        //_this.props.onSuggestSelect(suggest);
+      });
+    }
+
+
+
   },
 
   /**

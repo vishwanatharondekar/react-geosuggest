@@ -72,8 +72,8 @@ const Geosuggest = React.createClass({
       this.googleMaps = googleMaps;
     }
 
-    this.autocompleteService = new googleMap.places.AutocompleteService();
-    this.geocoder = new googleMap.Geocoder();
+    this.autocompleteService = new googleMaps.places.AutocompleteService();
+    this.geocoder = new googleMaps.Geocoder();
     this.refs['big-locality'].style['display'] = "none";
   },
 
@@ -230,7 +230,6 @@ const Geosuggest = React.createClass({
     if(this.state.userInput===""){
       this.clearLocality();
     }
-    console.log('Clear if locality here');
   },
 
   /**

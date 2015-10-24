@@ -106,7 +106,7 @@ const Geosuggest = React.createClass({
           lng: location.lng()
         };
 
-        _this.props.onSuggestSelect(suggest);
+        //_this.props.onSuggestSelect(suggest);
       });
     }
 

@@ -207,8 +207,8 @@ const Geosuggest = React.createClass({
       skipSuggest = this.props.skipSuggest;
 
     this.props.fixtures.forEach(function(suggest) {
-      if (!skipSuggest(suggest) && suggest.label.match(regex)) {
-        suggest.placeId = suggest.label;
+      if (!skipSuggest(suggest.gmaps) && suggest.label.match(regex)) {
+        suggest.placeId = suggest.placeId || suggest.label;
         suggests.push(suggest);
       }
     });

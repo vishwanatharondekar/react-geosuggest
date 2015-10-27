@@ -194,6 +194,15 @@ const Geosuggest = React.createClass({
     );
   },
 
+  isAlreadyPresnt : function(suggests, suggest){
+    for (var i = suggests.length - 1; i >= 0; i--) {
+      if(suggests[i].placeId === suggest.place_id){
+        return true
+      }
+    };
+    return false;
+  },
+
   /**
    * Update the suggests
    * @param  {Object} suggestsGoogle The new google suggests
@@ -207,6 +216,7 @@ const Geosuggest = React.createClass({
       regex = new RegExp(this.state.userInput, 'gim'),
       skipSuggest = this.props.skipSuggest;
 
+
     this.props.fixtures.forEach(function(suggest) {
       if (!skipSuggest(suggest.gmaps) && suggest.label.match(regex)) {
         suggest.placeId = suggest.placeId || suggest.label;
@@ -215,7 +225,7 @@ const Geosuggest = React.createClass({
     });
 
     suggestsGoogle.forEach(suggest => {
-      if (!skipSuggest(suggest)) {
+      if (!skipSuggest(suggest) && !this.isAlreadyPresnt(suggests, suggest)) {
         suggests.push({
           label: this.props.getSuggestLabel(suggest),
           placeId: suggest.place_id
@@ -428,6 +438,13 @@ const Geosuggest = React.createClass({
    * @return {Array} The suggestions
    */
   getSuggestItems: function() {
+    if(!this.state.suggests.length && this.state.userInput){
+      this.state.suggests.push({
+        label : 'No results found',
+        className : 'no-results'
+      })
+    }
+
     return this.state.suggests.map(function(suggest) {
       var isActive = this.state.activeSuggest &&
         suggest.placeId === this.state.activeSuggest.placeId;

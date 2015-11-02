@@ -69,8 +69,8 @@
 
 .geosuggest .locality{
   position: absolute;
-  left: 10px;
-  top: 7px;
+  left: 32px;
+  top: 13px;
 }
 .geosuggest .delete-icon{
   margin: 0 5px;

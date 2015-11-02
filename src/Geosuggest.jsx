@@ -261,7 +261,7 @@ const Geosuggest = React.createClass({
       activeSuggest : undefined
     });
     this.refs['big-locality'].style['display'] = "none";
-    this.refs['geosuggestInput'].style['padding-left'] = "1em";
+    this.refs['geosuggestInput'].style['padding-left'] = (12 + 20) + "px";
     this.refs['geosuggestInput'].focus();
   },
 
@@ -385,7 +385,7 @@ const Geosuggest = React.createClass({
           });
 
           this.refs['big-locality'].style['display'] = "block";
-          this.refs['geosuggestInput'].style['padding-left'] = (this.refs['big-locality'].offsetWidth+12) + "px";
+          this.refs['geosuggestInput'].style['padding-left'] = (this.refs['big-locality'].offsetWidth+12 + 20) + "px";
           this.refs['geosuggestInput'].focus();
         } else {
           suggest.location = {
@@ -425,6 +425,8 @@ const Geosuggest = React.createClass({
         <div ref="big-locality" className="locality" style={{display:bigLocalityVisible}}>
           <span>{this.state.locality}</span>
           <span onClick={this.clearLocality} className="delete-icon">X</span>
+        </div>
+        <div className="marker-icon">
         </div>
         <ul className={this.getSuggestsClasses()}>
           {this.getSuggestItems()}

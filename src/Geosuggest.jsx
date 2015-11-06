@@ -388,6 +388,9 @@ const Geosuggest = React.createClass({
           this.refs['geosuggestInput'].style['padding-left'] = (this.refs['big-locality'].offsetWidth+12 + 20) + "px";
           this.refs['geosuggestInput'].focus();
         } else {
+          this.setState({
+            userInput : suggest.label
+          });
           suggest.location = {
             lat: location.lat(),
             lng: location.lng()

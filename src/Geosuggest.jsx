@@ -27,7 +27,8 @@ const Geosuggest = React.createClass({
       onChange: () => {},
       skipSuggest: () => {},
       getSuggestLabel: suggest => suggest.description,
-      autoActivateFirstSuggest: false
+      autoActivateFirstSuggest: false,
+      autoShowSuggest : false
     };
   },
 
@@ -41,6 +42,7 @@ const Geosuggest = React.createClass({
       userInput: this.props.initialValue,
       placeholder : this.props.placeholder,
       activeSuggest: null,
+      fixtures : this.props.fixtures,
       suggests: []
     };
   },
@@ -51,7 +53,16 @@ const Geosuggest = React.createClass({
    */
   componentWillReceiveProps(props) {
     if (this.props.initialValue !== props.initialValue) {
-      this.setState({userInput: props.initialValue});
+      this.setState({ userInput: props.initialValue });
+    }
+
+    if (this.props.autoShowSuggest) {
+      this.setState({
+        fixtures: props.fixtures
+      });
+      this.state.fixtures = props.fixtures;
+      this.showSuggests();
+      this.refs.geosuggestInput.focus();
     }
   },
 
@@ -74,6 +85,8 @@ const Geosuggest = React.createClass({
     this.geocoder = new googleMaps.Geocoder();
     this.refs['big-locality'].style['display'] = "none";
     this.setInputValue({ value : this.props.initialValue, placeId : this.props.placeId});
+    this.refs.geosuggestInput.focus();
+    this.showSuggests();
   },
 
   /**
@@ -208,6 +221,7 @@ const Geosuggest = React.createClass({
    * @param  {Object} suggestsGoogle The new google suggests
    */
   updateSuggests: function(suggestsGoogle) {
+    var _this = this;
     if (!suggestsGoogle) {
       suggestsGoogle = [];
     }
@@ -217,8 +231,8 @@ const Geosuggest = React.createClass({
       skipSuggest = this.props.skipSuggest;
 
 
-    this.props.fixtures.forEach(function(suggest) {
-      if (!skipSuggest(suggest.gmaps) && suggest.label.match(regex)) {
+    this.state.fixtures.forEach(function(suggest) {
+      if (!skipSuggest(suggest.gmaps) &&  ( !_this.state.userInput || suggest.label.match(regex)) ) {
         suggest.placeId = suggest.placeId || suggest.label;
         suggests.push(suggest);
       }
@@ -412,6 +426,7 @@ const Geosuggest = React.createClass({
       <div className={'geosuggest ' + this.props.className}
           onClick={this.onClick}>
         <input
+          autofocus
           className="geosuggest__input"
           ref="geosuggestInput"
           type="text"

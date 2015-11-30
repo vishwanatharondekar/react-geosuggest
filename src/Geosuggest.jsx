@@ -438,7 +438,7 @@ const Geosuggest = React.createClass({
           onFocus={this.onFocus}
           onBlur={this.hideSuggests} />
         <div ref="edit-locality" onClick={this.clear} className={['edit-locality' , this.state.userInput?'':'hidden'].join(' ')}>
-          <span>Edit</span>
+          <span>Change</span>
         </div>
         <div ref="big-locality" className="locality" style={{display:bigLocalityVisible}}>
           <span>{this.state.locality}</span>

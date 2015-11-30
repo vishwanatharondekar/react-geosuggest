@@ -111,15 +111,7 @@ const Geosuggest = React.createClass({
         _this.setState({
           userInput: value
         });
-
-        var suggest = {};
-        suggest.gmaps = gmaps;
-        suggest.location = {
-          lat: location.lat(),
-          lng: location.lng()
-        };
-
-        //_this.props.onSuggestSelect(suggest);
+        _this.refs.geosuggestInput.blur();
       });
     }
 

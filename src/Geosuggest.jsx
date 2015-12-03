@@ -358,6 +358,9 @@ const Geosuggest = React.createClass({
       this.setState({
         userInput: suggest.label
       });
+
+
+      this.clearLocality();
       this.props.onSuggestSelect(suggest);
       return;
     }
@@ -401,6 +404,7 @@ const Geosuggest = React.createClass({
             lat: location.lat(),
             lng: location.lng()
           };
+          this.clearLocality();
           this.props.onSuggestSelect(suggest);
         }
 

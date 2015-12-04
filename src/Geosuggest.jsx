@@ -56,10 +56,10 @@ const Geosuggest = React.createClass({
       this.setState({ userInput: props.initialValue });
     }
 
+    this.setState({
+      fixtures: props.fixtures
+    });
     if (this.props.autoShowSuggest) {
-      this.setState({
-        fixtures: props.fixtures
-      });
       this.state.fixtures = props.fixtures;
       this.showSuggests();
       this.refs.geosuggestInput.focus();
@@ -111,7 +111,7 @@ const Geosuggest = React.createClass({
         _this.setState({
           userInput: value
         });
-        _this.refs.geosuggestInput.blur();
+        _this.hideSuggests();
       });
     }
 

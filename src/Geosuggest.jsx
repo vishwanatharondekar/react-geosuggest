@@ -59,10 +59,13 @@ const Geosuggest = React.createClass({
     this.setState({
       fixtures: props.fixtures
     });
+
+    if(props.initialValue===''){
+      this.refs.geosuggestInput.focus();
+    }
     if (this.props.autoShowSuggest) {
       this.state.fixtures = props.fixtures;
       this.showSuggests();
-      this.refs.geosuggestInput.focus();
     }
   },
 
@@ -72,8 +75,7 @@ const Geosuggest = React.createClass({
    * Necessary objects of google api will also be determined and saved.
    */
   componentDidMount: function() {
-    var googleMaps = this.props.googleMaps
-      || (google && google.maps) || this.googleMaps;
+    var googleMaps = this.props.googleMaps || google && google.maps || this.googleMaps;
 
     if (!googleMaps) {
       console.error('Google map api was not found in the page.');
@@ -84,9 +86,13 @@ const Geosuggest = React.createClass({
     this.autocompleteService = new googleMaps.places.AutocompleteService();
     this.geocoder = new googleMaps.Geocoder();
     this.refs['big-locality'].style['display'] = "none";
-    this.setInputValue({ value : this.props.initialValue, placeId : this.props.placeId});
-    this.refs.geosuggestInput.focus();
-    this.showSuggests();
+    this.setInputValue({ value: this.props.initialValue, placeId: this.props.placeId });
+    if(this.props.initialValue===''){
+      this.refs.geosuggestInput.focus();
+    }
+    //this.refs.geosuggestInput.focus();
+    //this.hideSuggests();
+    //this.showSuggests();
   },
 
   /**

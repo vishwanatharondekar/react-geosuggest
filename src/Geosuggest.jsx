@@ -60,9 +60,9 @@ const Geosuggest = React.createClass({
       fixtures: props.fixtures
     });
 
-    if(props.initialValue===''){
-      this.refs.geosuggestInput.focus();
-    }
+    // if(props.initialValue===''){
+    //   this.refs.geosuggestInput.focus();
+    // }
     if (this.props.autoShowSuggest) {
       this.state.fixtures = props.fixtures;
       this.showSuggests();
@@ -87,7 +87,7 @@ const Geosuggest = React.createClass({
     this.geocoder = new googleMaps.Geocoder();
     this.refs['big-locality'].style['display'] = "none";
     this.setInputValue({ value: this.props.initialValue, placeId: this.props.placeId });
-    if(this.props.initialValue===''){
+    if(!this.props.initialValue && !this.props.placeId){
       this.refs.geosuggestInput.focus();
     }
     //this.refs.geosuggestInput.focus();
@@ -274,7 +274,7 @@ const Geosuggest = React.createClass({
     });
     this.refs['big-locality'].style['display'] = "none";
     this.refs['geosuggestInput'].style['padding-left'] = (12 + 20) + "px";
-    this.refs['geosuggestInput'].focus();
+    //this.refs['geosuggestInput'].focus();
   },
 
   clearIfLocality : function (argument) {
@@ -428,7 +428,6 @@ const Geosuggest = React.createClass({
       <div className={'geosuggest ' + this.props.className}
           onClick={this.onClick}>
         <input
-          autofocus
           className="geosuggest__input"
           ref="geosuggestInput"
           type="text"

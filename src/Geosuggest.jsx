@@ -98,9 +98,9 @@ const Geosuggest = React.createClass({
     this.setInputValue({ value: this.props.initialValue, placeId: this.props.placeId });
 
 
-    if(!this.props.initialValue && !this.props.placeId){
-      this.refs.geosuggestInput.focus();
-    }
+    // if(!this.props.initialValue && !this.props.placeId){
+    //   this.refs.geosuggestInput.focus();
+    // }
     //this.refs.geosuggestInput.focus();
     //this.hideSuggests();
     //this.showSuggests();

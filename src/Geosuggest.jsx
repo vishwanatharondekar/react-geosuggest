@@ -47,6 +47,13 @@ const Geosuggest = React.createClass({
     };
   },
 
+  componentDidUpdate(){
+    if(this.props.blurred){
+      this.hideSuggests();
+      React.findDOMNode(this.refs['geosuggestInput']).blur();
+    }
+  },
+
   /**
    * Change inputValue if prop changes
    * @param {Object} props The new props
@@ -67,6 +74,8 @@ const Geosuggest = React.createClass({
       this.state.fixtures = props.fixtures;
       this.showSuggests();
     }
+
+
   },
 
   /**
@@ -87,6 +96,8 @@ const Geosuggest = React.createClass({
     this.geocoder = new googleMaps.Geocoder();
     this.refs['big-locality'].style['display'] = "none";
     this.setInputValue({ value: this.props.initialValue, placeId: this.props.placeId });
+
+
     if(!this.props.initialValue && !this.props.placeId){
       this.refs.geosuggestInput.focus();
     }
@@ -360,7 +371,12 @@ const Geosuggest = React.createClass({
       isSuggestsHidden: true
     });
 
-    if (suggest.location) {
+    if(suggest.type && suggest.type==="geolocate"){
+      this.props.onSuggestSelect(suggest);
+      return;
+    }
+
+    if (suggest.skipGeoCoding || suggest.location) {
       this.setState({
         userInput: suggest.label
       });
@@ -466,11 +482,22 @@ const Geosuggest = React.createClass({
    * @return {Array} The suggestions
    */
   getSuggestItems: function() {
+
+
+
     if(!this.state.suggests.length && this.state.userInput){
       this.state.suggests.push({
         label : 'No results found',
         className : 'no-results'
       })
+    }
+
+    if(!this.state.userInput){
+      this.state.suggests.unshift({
+        label : 'Use my location',
+        className : 'geolocate',
+        type : 'geolocate'
+      });
     }
 
     return this.state.suggests.map(function(suggest) {

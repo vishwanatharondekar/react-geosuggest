@@ -479,7 +479,9 @@ const Geosuggest = React.createClass({
 
           // Pass formatted address to userInput
           _this.setState({
-            userInput: latlng.formattedAddress
+            userInput: latlng.formattedAddress,
+            disabled: false,
+            className: _this.props.className
           });
 
           // Trigger select if suggest object is passed

@@ -43,7 +43,9 @@ const Geosuggest = React.createClass({
       placeholder : this.props.placeholder,
       activeSuggest: null,
       fixtures : this.props.fixtures,
-      suggests: []
+      suggests: [],
+      disabled: this.props.disabled,
+      className: this.props.className
     };
   },
 
@@ -61,6 +63,16 @@ const Geosuggest = React.createClass({
   componentWillReceiveProps(props) {
     if (this.props.initialValue !== props.initialValue) {
       this.setState({ userInput: props.initialValue });
+    }
+
+    if(props.coordinates) {
+      var coords = props.coordinates.split(',');
+      var latlng = {
+        lat: parseFloat(coords[0]),
+        lng: parseFloat(coords[1])
+      };
+
+      this.reverseGeocode(latlng, false, false);
     }
 
     this.setState({
@@ -372,7 +384,55 @@ const Geosuggest = React.createClass({
     });
 
     if(suggest.type && suggest.type==="geolocate"){
-      this.props.onSuggestSelect(suggest);
+      // Check if browser supports geolocation
+      if (!navigator.geolocation) {
+        alert('Sorry! Your browser does not support geolocation. Please enter your locality manually.');
+        return;
+      }
+
+      this.setState({
+        userInput: "Fetching Location...",
+        disabled: true,
+        className: 'loading-geolocation'
+      });
+
+      var _this = this;
+
+      // on Success
+      function success(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        var accuracy = position.coords.accuracy;
+        suggest.position = position;
+
+        var latlng = {
+          lat: parseFloat(latitude),
+          lng: parseFloat(longitude)
+        };
+
+        // this.setState handled in reverseGeocode()
+
+        _this.reverseGeocode(latlng, suggest, accuracy);
+      }
+
+      // on Error
+      function error(err) {
+        alert('We are unable to locate you. Please check if you have GPS turned on.');
+        console.error('geoLocateUser() failed! Error message = ' + err.message);
+
+        _this.setState({
+          userInput: _this.props.initialValue,
+          disabled: false,
+          className: _this.props.className
+        });
+
+        return false;
+      }
+
+      navigator.geolocation.getCurrentPosition(success, error, {
+        enableHighAccuracy: true
+      });
+      
       return;
     }
 
@@ -388,6 +448,47 @@ const Geosuggest = React.createClass({
     }
 
     this.geocodeSuggest(suggest);
+  },
+
+  /**
+   * Reverse Geocode from latLng to formattedAddress
+   */
+  reverseGeocode: function reverseGeocode(latlng, suggest, accuracy) {
+    var _this = this;
+
+    this.geocoder.geocode({'location': latlng}, function (results, status) {
+      if (status === google.maps.GeocoderStatus.OK) {
+        if (results[1]) {
+          // Set formatted address
+          latlng.formattedAddress = results[1].formatted_address;
+
+          // Handle inaccurate location
+          if (accuracy > 100) {
+            var userResponse = window.confirm('Are you located at ' + latlng.formattedAddress.toString() + '?\n');
+
+            if (userResponse !== true) {
+              alert('Please enter your location manually.');
+              _this.setState({
+                userInput: _this.props.initialValue,
+                disabled: false,
+                className: _this.props.className
+              })
+              return;
+            }
+          }
+
+          // Pass formatted address to userInput
+          _this.setState({
+            userInput: latlng.formattedAddress
+          });
+
+          // Trigger select if suggest object is passed
+          if (typeof(suggest) === "object") {
+            _this.props.onSuggestSelect(suggest);
+          }
+        }
+      }
+    })
   },
 
   /**
@@ -448,7 +549,7 @@ const Geosuggest = React.createClass({
   render: function() {
     let bigLocalityVisible = this.state.locality?'block':'none';
     return (// eslint-disable-line no-extra-parens
-      <div className={'geosuggest ' + this.props.className}
+      <div className={'geosuggest ' + this.state.className}
           onClick={this.onClick}>
         <input
           className="geosuggest__input"
@@ -456,7 +557,7 @@ const Geosuggest = React.createClass({
           type="text"
           value={this.state.userInput}
           placeholder={this.state.placeholder}
-          disabled={this.props.disabled}
+          disabled={this.state.disabled}
           onKeyDown={this.onInputKeyDown}
           onChange={this.onInputChange}
           onFocus={this.onFocus}

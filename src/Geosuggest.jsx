@@ -492,7 +492,7 @@ const Geosuggest = React.createClass({
       })
     }
 
-    if(!this.state.userInput){
+    if(this.props.showGeoLocate && !this.state.userInput ){
       this.state.suggests.unshift({
         label : 'Use my location',
         className : 'geolocate',

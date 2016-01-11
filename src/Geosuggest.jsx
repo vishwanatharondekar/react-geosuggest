@@ -484,8 +484,12 @@ const Geosuggest = React.createClass({
             className: _this.props.className
           });
 
+
           // Trigger select if suggest object is passed
           if (typeof(suggest) === "object") {
+            suggest.gmaps = {
+              formatted_address : latlng.formattedAddress
+            }
             _this.props.onSuggestSelect(suggest);
           }
         }

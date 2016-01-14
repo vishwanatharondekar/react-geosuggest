@@ -164,6 +164,13 @@ const Geosuggest = React.createClass({
    * When the input gets focused
    */
   onFocus: function() {
+    if(this.state.className==="loading-geolocation"){
+
+        this.setState({
+            userInput: '',
+            className: ''
+        });
+    }
     this.props.onFocus();
     this.showSuggests();
   },
@@ -392,7 +399,6 @@ const Geosuggest = React.createClass({
 
       this.setState({
         userInput: "Fetching Location...",
-        disabled: true,
         className: 'loading-geolocation'
       });
 
@@ -422,7 +428,6 @@ const Geosuggest = React.createClass({
 
         _this.setState({
           userInput: _this.props.initialValue,
-          disabled: false,
           className: _this.props.className
         });
 
@@ -470,7 +475,6 @@ const Geosuggest = React.createClass({
               alert('Please enter your location manually.');
               _this.setState({
                 userInput: _this.props.initialValue,
-                disabled: false,
                 className: _this.props.className
               })
               return;
@@ -480,7 +484,6 @@ const Geosuggest = React.createClass({
           // Pass formatted address to userInput
           _this.setState({
             userInput: latlng.formattedAddress,
-            disabled: false,
             className: _this.props.className
           });
 

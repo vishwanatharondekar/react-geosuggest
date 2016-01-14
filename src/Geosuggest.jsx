@@ -423,7 +423,7 @@ const Geosuggest = React.createClass({
 
       // on Error
       function error(err) {
-        alert('We are unable to locate you. Please check if you have GPS turned on.');
+        alert('We are unable to locate you. Please check your location settings.');
         console.error('geoLocateUser() failed! Error message = ' + err.message);
 
         _this.setState({
@@ -603,11 +603,13 @@ const Geosuggest = React.createClass({
     }
 
     if(this.props.showGeoLocate && !this.state.userInput ){
-      this.state.suggests.unshift({
-        label : 'Use my location',
-        className : 'geolocate',
-        type : 'geolocate'
-      });
+      if(this.state.suggests.length==0 || this.state.suggests[0].type!=='geolocate'){
+        this.state.suggests.unshift({
+          label : 'Use my location',
+          className : 'geolocate',
+          type : 'geolocate'
+        });
+      }
     }
 
     return this.state.suggests.map(function(suggest) {

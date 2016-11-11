@@ -56,13 +56,40 @@
 }
 .geosuggest-item:hover,
 .geosuggest-item:focus {
-  background: #f5f5f5;
+  background: #f5f5f5!important;
 }
-.geosuggest-item--active {
+/*.geosuggest-item--active {
   background: #267dc0;
   color: #fff;
-}
-.geosuggest-item--active:hover,
+}*/
+.geosuggest-item--active,.geosuggest-item--active:hover,
 .geosuggest-item--active:focus {
-  background: #ccc;
+  background: #f5f5f5!important;
 }
+
+.geosuggest .locality{
+  position: absolute;
+  left: 32px;
+  top: 13px;
+}
+.geosuggest .delete-icon{
+  margin: 0 5px;
+}
+
+.geosuggest .edit-locality{
+  position: absolute;
+  top: 0px;
+  right: 10px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.geosuggest .edit-locality.hidden{
+  display: none;
+}
+
+.geosuggest .geosuggest-item span{
+  display: block;
+}
+

@@ -29,10 +29,17 @@ const GeosuggestItem = React.createClass({
    * @return {Function} The React element to render
    */
   render: function() {
+    let split = this.props.suggest.label.split(',');
+    let city = split.splice(split.length-3).join(',');
+    let locality = split.join(',');
+
     return (// eslint-disable-line no-extra-parens
       <li className={this.getSuggestClasses()}
         onClick={this.onClick}>
-          {this.props.suggest.label}
+        <div>
+          <span className="locality-item">{locality}</span>
+          <span className="city-item">{city}</span>
+        </div>
       </li>
     );
   },

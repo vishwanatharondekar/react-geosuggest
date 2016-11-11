@@ -20,13 +20,15 @@ const Geosuggest = React.createClass({
       bounds: null,
       country: null,
       types: null,
+      googleMaps: null,
       onSuggestSelect: () => {},
       onFocus: () => {},
       onBlur: () => {},
       onChange: () => {},
       skipSuggest: () => {},
       getSuggestLabel: suggest => suggest.description,
-      autoActivateFirstSuggest: false
+      autoActivateFirstSuggest: false,
+      autoShowSuggest : false
     };
   },
 
@@ -38,9 +40,20 @@ const Geosuggest = React.createClass({
     return {
       isSuggestsHidden: true,
       userInput: this.props.initialValue,
+      placeholder : this.props.placeholder,
       activeSuggest: null,
-      suggests: []
+      fixtures : this.props.fixtures,
+      suggests: [],
+      disabled: this.props.disabled,
+      className: this.props.className
     };
+  },
+
+  componentDidUpdate(){
+    if(this.props.blurred){
+      this.hideSuggests();
+      React.findDOMNode(this.refs['geosuggestInput']).blur();
+    }
   },
 
   /**
@@ -49,29 +62,90 @@ const Geosuggest = React.createClass({
    */
   componentWillReceiveProps(props) {
     if (this.props.initialValue !== props.initialValue) {
-      this.setState({userInput: props.initialValue});
+      this.setState({ userInput: props.initialValue });
     }
+
+    if(props.coordinates) {
+      var coords = props.coordinates.split(',');
+      var latlng = {
+        lat: parseFloat(coords[0]),
+        lng: parseFloat(coords[1])
+      };
+
+      this.reverseGeocode(latlng, false, false);
+    }
+
+    this.setState({
+      fixtures: props.fixtures
+    });
+
+    // if(props.initialValue===''){
+    //   this.refs.geosuggestInput.focus();
+    // }
+    if (this.props.autoShowSuggest) {
+      this.state.fixtures = props.fixtures;
+      this.showSuggests();
+    }
+
+
   },
 
+  /**
+   * Called on the client side after component is mounted.
+   * Google api sdk object will be obtained and cached as a instance property.
+   * Necessary objects of google api will also be determined and saved.
+   */
   componentDidMount: function() {
-    this.setInputValue(this.props.initialValue);
+    var googleMaps = this.props.googleMaps || google && google.maps || this.googleMaps;
 
-    var googleMap = (google && google.maps) || this.googleMaps;
-
-    if (!googleMap) {
+    if (!googleMaps) {
       console.error('Google map api was not found in the page.');
     } else {
-      this.googleMaps = googleMap;
+      this.googleMaps = googleMaps;
     }
 
-    this.autocompleteService = new googleMap.places.AutocompleteService();
-    this.geocoder = new googleMap.Geocoder();
+    this.autocompleteService = new googleMaps.places.AutocompleteService();
+    this.geocoder = new googleMaps.Geocoder();
+    this.refs['big-locality'].style['display'] = "none";
+    this.setInputValue({ value: this.props.initialValue, placeId: this.props.placeId });
+
+
+    // if(!this.props.initialValue && !this.props.placeId){
+    //   this.refs.geosuggestInput.focus();
+    // }
+    //this.refs.geosuggestInput.focus();
+    //this.hideSuggests();
+    //this.showSuggests();
   },
 
-  setInputValue: function(value) {
-    this.setState({
-      userInput: value
-    });
+  /**
+   * Method used for setting initial value.
+   * @param {string} value to set in input
+   */
+  setInputValue: function(obj) {
+
+    var _this = this;
+    if(obj.value){
+      this.setState({
+        userInput: obj.value
+      });
+    } else if (obj.placeId){
+      this.geocoder.geocode({
+        placeId: obj.placeId
+      }, function(results, status) {
+        var gmaps = results[0],
+          location = gmaps.geometry.location;
+
+        var value = gmaps.formatted_address;
+        _this.setState({
+          userInput: value
+        });
+        _this.hideSuggests();
+      });
+    }
+
+
+
   },
 
   /**
@@ -90,6 +164,13 @@ const Geosuggest = React.createClass({
    * When the input gets focused
    */
   onFocus: function() {
+    if(this.state.className==="loading-geolocation"){
+
+        this.setState({
+            userInput: '',
+            className: ''
+        });
+    }
     this.props.onFocus();
     this.showSuggests();
   },
@@ -110,6 +191,7 @@ const Geosuggest = React.createClass({
     this.setState({userInput: ''}, function() {
       this.hideSuggests();
     }.bind(this));
+    this.refs['geosuggestInput'].focus();
   },
 
   /**
@@ -123,8 +205,8 @@ const Geosuggest = React.createClass({
 
     var options = {
       input: this.state.userInput,
-      location: this.props.location || new this.googleMaps.LatLng(0, 0),
-      radius: this.props.radius
+      location: this.state.location || new this.googleMaps.LatLng(0, 0),
+      radius: this.state.radius || 0
     };
 
     if (this.props.bounds) {
@@ -153,11 +235,21 @@ const Geosuggest = React.createClass({
     );
   },
 
+  isAlreadyPresnt : function(suggests, suggest){
+    for (var i = suggests.length - 1; i >= 0; i--) {
+      if(suggests[i].placeId === suggest.place_id){
+        return true
+      }
+    };
+    return false;
+  },
+
   /**
    * Update the suggests
    * @param  {Object} suggestsGoogle The new google suggests
    */
   updateSuggests: function(suggestsGoogle) {
+    var _this = this;
     if (!suggestsGoogle) {
       suggestsGoogle = [];
     }
@@ -166,15 +258,16 @@ const Geosuggest = React.createClass({
       regex = new RegExp(this.state.userInput, 'gim'),
       skipSuggest = this.props.skipSuggest;
 
-    this.props.fixtures.forEach(function(suggest) {
-      if (!skipSuggest(suggest) && suggest.label.match(regex)) {
-        suggest.placeId = suggest.label;
+
+    this.state.fixtures.forEach(function(suggest) {
+      if (!skipSuggest(suggest.gmaps) &&  ( !_this.state.userInput || suggest.label.match(regex)) ) {
+        suggest.placeId = suggest.placeId || suggest.label;
         suggests.push(suggest);
       }
     });
 
     suggestsGoogle.forEach(suggest => {
-      if (!skipSuggest(suggest)) {
+      if (!skipSuggest(suggest) && !this.isAlreadyPresnt(suggests, suggest)) {
         suggests.push({
           label: this.props.getSuggestLabel(suggest),
           placeId: suggest.place_id
@@ -203,6 +296,23 @@ const Geosuggest = React.createClass({
     }.bind(this), 100);
   },
 
+  clearLocality : function(){
+    this.setState({
+      locality : undefined,
+      placeholder : this.props.placeholder,
+      activeSuggest : undefined
+    });
+    this.refs['big-locality'].style['display'] = "none";
+    this.refs['geosuggestInput'].style['padding-left'] = (12 + 20) + "px";
+    //this.refs['geosuggestInput'].focus();
+  },
+
+  clearIfLocality : function (argument) {
+    if(this.state.userInput===""){
+      this.clearLocality();
+    }
+  },
+
   /**
    * When a key gets pressed in the input
    * @param  {Event} event The keypress event
@@ -227,6 +337,8 @@ const Geosuggest = React.createClass({
       case 27: // ESC
         this.hideSuggests();
         break;
+      case 8://Backspace
+        this.clearIfLocality();
       default:
         break;
     }
@@ -271,17 +383,71 @@ const Geosuggest = React.createClass({
    */
   selectSuggest: function(suggest) {
     if (!suggest) {
-      suggest = {
-        label: this.state.userInput
-      };
+      return;
     }
 
     this.setState({
-      isSuggestsHidden: true,
-      userInput: suggest.label
+      isSuggestsHidden: true
     });
 
-    if (suggest.location) {
+    if(suggest.type && suggest.type==="geolocate"){
+      // Check if browser supports geolocation
+      if (!navigator.geolocation) {
+        alert('Sorry! Your browser does not support geolocation. Please enter your locality manually.');
+        return;
+      }
+
+      this.setState({
+        userInput: "Fetching Location...",
+        className: 'loading-geolocation'
+      });
+
+      var _this = this;
+
+      // on Success
+      function success(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        var accuracy = position.coords.accuracy;
+        suggest.position = position;
+
+        var latlng = {
+          lat: parseFloat(latitude),
+          lng: parseFloat(longitude)
+        };
+
+        // this.setState handled in reverseGeocode()
+
+        _this.reverseGeocode(latlng, suggest, accuracy);
+      }
+
+      // on Error
+      function error(err) {
+        alert('We are unable to locate you. Please check your location settings.');
+        console.error('geoLocateUser() failed! Error message = ' + err.message);
+
+        _this.setState({
+          userInput: _this.props.initialValue,
+          className: _this.props.className
+        });
+
+        return false;
+      }
+
+      navigator.geolocation.getCurrentPosition(success, error, {
+        enableHighAccuracy: true
+      });
+      
+      return;
+    }
+
+    if (suggest.skipGeoCoding || suggest.location) {
+      this.setState({
+        userInput: suggest.label
+      });
+
+
+      this.clearLocality();
       this.props.onSuggestSelect(suggest);
       return;
     }
@@ -290,27 +456,97 @@ const Geosuggest = React.createClass({
   },
 
   /**
+   * Reverse Geocode from latLng to formattedAddress
+   */
+  reverseGeocode: function reverseGeocode(latlng, suggest, accuracy) {
+    var _this = this;
+
+    this.geocoder.geocode({'location': latlng}, function (results, status) {
+      if (status === google.maps.GeocoderStatus.OK) {
+        if (results[1]) {
+          // Set formatted address
+          latlng.formattedAddress = results[1].formatted_address;
+
+          // Handle inaccurate location
+          if (accuracy > 100) {
+            var userResponse = window.confirm('Are you located at ' + latlng.formattedAddress.toString() + '?\n');
+
+            if (userResponse !== true) {
+              alert('Please enter your location manually.');
+              _this.setState({
+                userInput: _this.props.initialValue,
+                className: _this.props.className
+              })
+              return;
+            }
+          }
+
+          // Pass formatted address to userInput
+          _this.setState({
+            userInput: latlng.formattedAddress,
+            className: _this.props.className
+          });
+
+
+          // Trigger select if suggest object is passed
+          if (typeof(suggest) === "object") {
+            suggest.gmaps = {
+              formatted_address : latlng.formattedAddress
+            }
+            _this.props.onSuggestSelect(suggest);
+          }
+        }
+      }
+    })
+  },
+
+  /**
    * Geocode a suggest
    * @param  {Object} suggest The suggest
    */
   geocodeSuggest: function(suggest) {
-    this.geocoder.geocode(
-      {address: suggest.label},
-      function(results, status) {
+
+    var geoCodeInput = {};
+    if(suggest.placeId){
+      geoCodeInput.placeId = suggest.placeId;
+    } else if (suggest.label){
+      geoCodeInput.address = suggest.label;
+    }
+
+    this.geocoder.geocode(geoCodeInput, function (results, status) {
+
         if (status !== this.googleMaps.GeocoderStatus.OK) {
           return;
         }
 
         var gmaps = results[0],
           location = gmaps.geometry.location;
-
         suggest.gmaps = gmaps;
-        suggest.location = {
-          lat: location.lat(),
-          lng: location.lng()
-        };
 
-        this.props.onSuggestSelect(suggest);
+        if(suggest.gmaps.types.indexOf("sublocality_level_1")!=-1){
+          this.setState({
+            locality : suggest.gmaps.address_components[0].short_name,
+            userInput : '',
+            placeholder : 'Where in ' + suggest.gmaps.address_components[0].short_name + " ?",
+            location : location,
+            radius : 5000
+          });
+
+          this.refs['big-locality'].style['display'] = "block";
+          this.refs['geosuggestInput'].style['padding-left'] = (this.refs['big-locality'].offsetWidth+12 + 20) + "px";
+          this.refs['geosuggestInput'].focus();
+        } else {
+          this.setState({
+            userInput : suggest.label
+          });
+          suggest.location = {
+            lat: location.lat(),
+            lng: location.lng()
+          };
+          this.clearLocality();
+          this.props.onSuggestSelect(suggest);
+        }
+
       }.bind(this)
     );
   },
@@ -320,20 +556,30 @@ const Geosuggest = React.createClass({
    * @return {Function} The React element to render
    */
   render: function() {
+    let bigLocalityVisible = this.state.locality?'block':'none';
     return (// eslint-disable-line no-extra-parens
-      <div className={'geosuggest ' + this.props.className}
+      <div className={'geosuggest ' + this.state.className}
           onClick={this.onClick}>
         <input
           className="geosuggest__input"
           ref="geosuggestInput"
           type="text"
           value={this.state.userInput}
-          placeholder={this.props.placeholder}
-          disabled={this.props.disabled}
+          placeholder={this.state.placeholder}
+          disabled={this.state.disabled}
           onKeyDown={this.onInputKeyDown}
           onChange={this.onInputChange}
           onFocus={this.onFocus}
           onBlur={this.hideSuggests} />
+        <div ref="edit-locality" onClick={this.clear} className={['edit-locality' , this.state.userInput?'':'hidden'].join(' ')}>
+          <span>Change</span>
+        </div>
+        <div ref="big-locality" className="locality" style={{display:bigLocalityVisible}}>
+          <span>{this.state.locality}</span>
+          <span onClick={this.clearLocality} className="delete-icon">X</span>
+        </div>
+        <div className="marker-icon">
+        </div>
         <ul className={this.getSuggestsClasses()}>
           {this.getSuggestItems()}
         </ul>
@@ -346,6 +592,26 @@ const Geosuggest = React.createClass({
    * @return {Array} The suggestions
    */
   getSuggestItems: function() {
+
+
+
+    if(!this.state.suggests.length && this.state.userInput){
+      this.state.suggests.push({
+        label : 'No results found',
+        className : 'no-results'
+      })
+    }
+
+    if(this.props.showGeoLocate && !this.state.userInput ){
+      if(this.state.suggests.length==0 || this.state.suggests[0].type!=='geolocate'){
+        this.state.suggests.unshift({
+          label : 'Use my location',
+          className : 'geolocate',
+          type : 'geolocate'
+        });
+      }
+    }
+
     return this.state.suggests.map(function(suggest) {
       var isActive = this.state.activeSuggest &&
         suggest.placeId === this.state.activeSuggest.placeId;
